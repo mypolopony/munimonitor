@@ -51,19 +51,14 @@ def process_kinesis_event(event, context):
                         {"Name": "route_id", "Value": route_id},
                         {"Name": "trip_id", "Value": trip_id}
                     ],
-                    "MeasureName": "vehicle_position",
-                    "MeasureValue": str(latitude) + "," + str(longitude),
-                    "MeasureValueType": "VARCHAR",
-                    "Time": str(timestamp * 1000)  # Timestream expects time in milliseconds
-                },
-                {
-                    "Dimensions": [
-                        {"Name": "vehicle_id", "Value": vehicle_id}
+                    "MeasureName": "vehicle_data",
+                    "MeasureValues": [
+                        {"Name": "latitude", "Value": str(latitude), "Type": "DOUBLE"},
+                        {"Name": "longitude", "Value": str(longitude), "Type": "DOUBLE"},
+                        {"Name": "speed", "Value": str(speed), "Type": "DOUBLE"}
                     ],
-                    "MeasureName": "speed",
-                    "MeasureValue": str(speed),
-                    "MeasureValueType": "DOUBLE",
-                    "Time": str(timestamp * 1000)
+                    "MeasureValueType": "MULTI",
+                    "Time": str(timestamp * 1000)  # Timestream expects time in milliseconds
                 }
             ]
         )
