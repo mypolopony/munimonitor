@@ -8,6 +8,31 @@ class TSQueryEngine():
         self.database = database_name
         self.table = table_name
         self.client = boto3.client("timestream-query", region_name="us-west-2")
+
+    def _force_pandas_types(self, df: pd.DataFrame) -> pd.DataFrame:
+        """
+        Change the Pandas DataFrame column types to match the expected types.
+
+        Parameters
+        ----------
+        df : pd.DataFrame
+            The DataFrame to update
+        
+        Returns
+        -------
+        pd.DataFrame
+            The updated DataFrame
+        """
+        # Convert the time column to a datetime
+        if "time" in df.columns:
+            df["time"] = pd.to_datetime(df["time"])
+        
+        # Convert other columns to float
+        for column in ["latitude", "longitude", "speed"]:
+            if column in df.columns:
+                df[column] = df[column].astype(float)
+        
+        return df
     
     def _response_to_pandas(self, response: Dict[str, Any]) -> pd.DataFrame:
         """
@@ -24,6 +49,7 @@ class TSQueryEngine():
             The processed response as a Pandas DataFrame
         """
         rows = response["Rows"]
+        columns = [col["Name"] for col in response["ColumnInfo"]]
 
         processed_rows = []
         for row in rows:
@@ -32,11 +58,11 @@ class TSQueryEngine():
                 columns[i]: (
                     data[i].get("ScalarValue", None)
                 )
-                for i in range(len(response['ColumnInfo']))
+                for i in range(len(columns))
             }
             processed_rows.append(processed_row)
         
-        return pd.DataFrame(processed_rows, columns=columns)
+        return self._force_pandas_types(pd.DataFrame(processed_rows, columns=columns))
     
     def get_full_query_results(self, query_string: str) -> Dict[str, Any]:
         """
