@@ -1,9 +1,9 @@
 import boto3
 import pandas as pd
-from typing import Dict, Any
+from typing import Dict, List, Any
 from botocore.config import Config
 
-class QueryEngine():
+class TSQueryEngine():
     def __init__(self, database_name: str, table_name: str):
         self.database = database_name
         self.table = table_name
@@ -23,21 +23,20 @@ class QueryEngine():
         pd.DataFrame
             The processed response as a Pandas DataFrame
         """
-        column_names = [column["Name"] for column in response["ColumnInfo"]]
         rows = response["Rows"]
 
         processed_rows = []
         for row in rows:
             data = row["Data"]
             processed_row = {
-                column_names[i]: (
+                columns[i]: (
                     data[i].get("ScalarValue", None)
                 )
-                for i in range(len(column_names))
+                for i in range(len(response['ColumnInfo']))
             }
             processed_rows.append(processed_row)
         
-        return pd.DataFrame(processed_rows)
+        return pd.DataFrame(processed_rows, columns=columns)
     
     def get_full_query_results(self, query_string: str) -> Dict[str, Any]:
         """
@@ -55,37 +54,33 @@ class QueryEngine():
         """
         print(f"Executing Query...\n\t{query_string}")
 
-        query_results = []
-        next_token = None
+        # Try fetching the first set of results
+        response = self.client.query(QueryString=query_string)
+        next_token = response.get("NextToken", "")
 
-        while True:
-            # Perform the query or fetch the next set of results
-            if next_token:
-                response = self.client.query(QueryString=query_string, NextToken=next_token)
-            else:
-                response = self.client.query(QueryString=query_string)
-
-            # Append rows to the results
-            query_results.extend(response.get("Rows", []))
-
-            # Check for NextToken to continue fetching more results
-            next_token = response.get("NextToken")
-            if not next_token:
-                break  # No more pages, query is complete
+        # Continue fetching results until the query is complete
+        if next_token:
+            while True:
+                # If we have a NextToken, use it to fetch the next set of results
+                response = self.client.query(QueryString=query_string, NextToken=response.get("NextToken", ""))
+                
+                # We're complete
+                if response['QueryStatus']['ProgressPercentage'] == 100:
+                    break
 
             # Display query progress
             progress = response.get("QueryStatus", {}).get("ProgressPercentage", 0)
-            print(f"Query progress: {progress}%")
+            print(f"Query progress: {progress:.2f}%")
 
-        return query_results
+        return response
 
 
-class VehiclePositions(QueryEngine):
+class VehiclePositions(TSQueryEngine):
     def __init__(self):
         super().__init__("gtfs_data", "vehicle_positions")
-        self.valid_columns = ["time", "route_id", "vehicle_id", "latitude", "longitude", "speed"]
+        self.valid_columns = ["time", "trip_id", "route_id", "vehicle_id", "latitude", "longitude", "speed"]
 
-    def query(self, columns_to_return: list[str], where_clause: str="") -> pd.DataFrame:
+    def query(self, columns_to_return: List[str], where_clause: str="") -> pd.DataFrame:
         """
         Gather vehicle position data from the Timestream table.
 
@@ -93,6 +88,8 @@ class VehiclePositions(QueryEngine):
         ----------
         columns_to_return : List[str]
             The columns to return in the query
+        where_clause : str
+            The WHERE clause to filter the query
         
         Returns
         -------
