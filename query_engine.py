@@ -1,12 +1,13 @@
 import boto3
 import pandas as pd
 from typing import Dict, Any
+from botocore.config import Config
 
 class QueryEngine():
     def __init__(self, database_name: str, table_name: str):
         self.database = database_name
         self.table = table_name
-        self.client = boto3.client("timestream-query")
+        self.client = boto3.client("timestream-query", region_name="us-west-2")
     
     def _response_to_pandas(self, response: Dict[str, Any]) -> pd.DataFrame:
         """
@@ -30,12 +31,13 @@ class QueryEngine():
             data = row["Data"]
             processed_row = {
                 column_names[i]: (
-                    data[i].get('ScalarValue') if 'ScalarValue' in data[i] else None
+                    data[i].get("ScalarValue", None)
                 )
                 for i in range(len(column_names))
             }
             processed_rows.append(processed_row)
-        return processed_rows
+        
+        return pd.DataFrame(processed_rows)
     
     def get_full_query_results(self, query_string: str) -> Dict[str, Any]:
         """
@@ -79,11 +81,11 @@ class QueryEngine():
 
 
 class VehiclePositions(QueryEngine):
-    def __init__(self, database_name: str, table_name: str):
+    def __init__(self):
         super().__init__("gtfs_data", "vehicle_positions")
         self.valid_columns = ["time", "route_id", "vehicle_id", "latitude", "longitude", "speed"]
 
-    def query(self, columns_to_return) -> pd.DataFrame:
+    def query(self, columns_to_return: list[str], where_clause: str="") -> pd.DataFrame:
         """
         Gather vehicle position data from the Timestream table.
 
@@ -100,17 +102,23 @@ class VehiclePositions(QueryEngine):
         # Validate the columns to return
         if not set(columns_to_return).issubset(self.valid_columns):
             raise ValueError("Invalid columns specified. Valid columns are: ", self.valid_columns)
+
+        # Add the WHERE clause if provided
+        if where_clause:
+            where_clause = f"WHERE {where_clause}"
     
         # Construct the query
         query = f"""
         SELECT DISTINCT {", ".join(columns_to_return)}
         FROM "{self.database}"."{self.table}"
+        {where_clause}
         """
 
         # Execute the query and return the results as a Pandas DataFrame
-        response = self.raw_query(query)
+        response = self.get_full_query_results(query)
         self.dataframe = self._response_to_pandas(response)
 
         return self.dataframe
     
-    def create_geofence
+    def create_geofence(self):
+        pass
