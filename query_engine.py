@@ -91,7 +91,7 @@ class TSQueryEngine():
                 response = self.client.query(QueryString=query_string, NextToken=response.get("NextToken", ""))
                 
                 # We're complete
-                if response['QueryStatus']['ProgressPercentage'] == 100:
+                if response["QueryStatus"]["ProgressPercentage"] == 100:
                     break
 
             # Display query progress
