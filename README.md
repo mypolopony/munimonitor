@@ -10,14 +10,14 @@
 
 ## Pineline Architecture
 
-**EventBridge**: Drives the pipeline periodically
-**Lambda** (*push_to_kinesis*): Responds to the EventBridge and makes an API request from 511. It receives data in protobuf format and pushes it to Kinesis
-**Kinesis**: Receives the raw data and triggers Lambda
-**Lambda** (*process_process_kinesis_event*): Decodes the data and sends to structured **TimeStream** database
+**EventBridge**: Drives the pipeline periodically  
+**Lambda** (*push_to_kinesis*): Responds to the EventBridge and makes an API request from 511. It receives data in protobuf format and pushes it to Kinesis  
+**Kinesis**: Receives the raw data and triggers Lambda  
+**Lambda** (*process_process_kinesis_event*): Decodes the data and sends to structured **TimeStream** database  
 
 ## Querying
 
-
+*query_engine.py* Provides easy API access to the TimeStream database, as well as others in the future
 
 ## Makefile
 
