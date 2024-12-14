@@ -1,0 +1,29 @@
+========================================================================
+ City of San Francisco, California Streets
+------------------------------------------------------------------------
+ https://koordinates.com/layer/101761-city-of-san-francisco-california-streets/
+========================================================================
+From: City of San Francisco, California
+
+Description:
+  ​
+
+Region: San Francisco
+
+CRS: WGS 84 / World Mercator
+
+------------------------------------------------------------------------
+ Processing steps applied by Koordinates
+------------------------------------------------------------------------
+
+- imported to Koordinates in Esri JSON format on 14 May 2019
+- updated with new data on 14 Apr 2023
+- clipped to (37.832°N 122.514°W)-(37.707°N 122.358°W)
+- converted by Koordinates to Shapefile on 27 Nov 2024 (reference #3768636)
+
+====================
+No license specified
+====================
+
+No license was specified for this layer. This could mean default rights under copyright law for your legal jurisdiction may apply. Please check with Koordinates if you're unsure of your right to access and use this layer.
+

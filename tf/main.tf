@@ -5,8 +5,8 @@ provider "aws" {
 # Create Kinesis Stream
 resource "aws_kinesis_stream" "gtfs-muni" {
   name             = "gtfs-muni"
-  shard_count      = 1  # Adjust the number of shards based on your expected data volume
-  retention_period = 24 # Retention period in hours (default is 24)
+  shard_count      = 1  # Shards based on data volume
+  retention_period = 24 # Retention period in hours
 
   # Enhanced monitoring
   stream_mode_details {
